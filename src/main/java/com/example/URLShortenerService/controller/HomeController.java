@@ -25,6 +25,12 @@ public class HomeController {
         return "index";
     }
 
+    @GetMapping("/shorten")
+    public String shortenGet(Model model) {
+        model.addAttribute("request", new ShortenUrlRequest());
+        return "index";
+    }
+
     @PostMapping("/shorten")
     public String shorten(
             @Valid @ModelAttribute("request") ShortenUrlRequest request,
@@ -36,25 +42,13 @@ public class HomeController {
             return "index";
         }
 
-        log.info("Web shorten request for URL: {}", request.getUrl().replaceAll("[\\r\\n]", "_"));
+        log.info("Shorten request: {}", request.getUrl().replaceAll("[\\r\\n]", "_"));
 
-        ShortenUrlResponse response = service.createShortUrlResponse(
-                request.getUrl(),
-                getBaseUrl(httpRequest)
-        );
+        String baseUrl = httpRequest.getScheme() + "://"
+                + httpRequest.getServerName() + ":" + httpRequest.getServerPort();
 
+        ShortenUrlResponse response = service.createShortUrlResponse(request.getUrl(), baseUrl);
         model.addAttribute("response", response);
         return "result";
-    }
-
-    @GetMapping("/{shortCode}")
-    public String redirect(@PathVariable String shortCode) {
-        log.info("Web redirect request for shortCode: {}", shortCode.replaceAll("[\\r\\n]", "_"));
-        String originalUrl = service.getOriginalUrl(shortCode);
-        return "redirect:" + originalUrl;
-    }
-
-    private String getBaseUrl(HttpServletRequest request) {
-        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
     }
 }

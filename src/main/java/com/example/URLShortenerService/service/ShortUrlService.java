@@ -43,7 +43,7 @@ public class ShortUrlService {
         ShortUrl shortUrl = createShortUrl(originalUrl);
         return ShortenUrlResponse.builder()
                 .shortCode(shortUrl.getShortCode())
-                .shortUrl(baseUrl + "/" + shortUrl.getShortCode())
+                .shortUrl(baseUrl + "/r/" + shortUrl.getShortCode())
                 .originalUrl(shortUrl.getOriginalUrl())
                 .createdAt(shortUrl.getCreatedAt())
                 .expiredAt(shortUrl.getExpiredAt())

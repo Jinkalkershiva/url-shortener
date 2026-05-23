@@ -1,22 +1,414 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>URL Shortened</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkSnap — Link Ready!</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f0c29;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ── Background ── */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .bg-orb-1 { width: 500px; height: 500px; background: #22c55e; top: -120px; left: -100px; }
+        .bg-orb-2 { width: 400px; height: 400px; background: #667eea; bottom: -100px; right: -80px; animation-delay: 3s; }
+        .bg-orb-3 { width: 280px; height: 280px; background: #f093fb; top: 40%; left: 55%; animation-delay: 5s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-28px); }
+        }
+
+        /* ── Confetti canvas ── */
+        #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+
+        /* ── Card ── */
+        .card {
+            position: relative;
+            z-index: 10;
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 28px;
+            padding: 48px 44px;
+            width: 100%;
+            max-width: 580px;
+            animation: slideUp 0.6s cubic-bezier(.22,1,.36,1);
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ── Success header ── */
+        .success-ring {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            margin: 0 auto 16px;
+            font-size: 2rem;
+            box-shadow: 0 0 0 12px rgba(34,197,94,0.15), 0 8px 24px rgba(34,197,94,0.4);
+            animation: successPop 0.5s cubic-bezier(.22,1,.36,1) 0.2s both;
+        }
+        @keyframes successPop {
+            from { transform: scale(0) rotate(-180deg); opacity: 0; }
+            to   { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+
+        /* ── Short URL box ── */
+        .url-box {
+            background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(240,147,251,0.15));
+            border: 1.5px solid rgba(102,126,234,0.4);
+            border-radius: 16px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .url-box:hover {
+            border-color: rgba(102,126,234,0.7);
+            box-shadow: 0 0 20px rgba(102,126,234,0.2);
+        }
+        .url-text {
+            flex: 1;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #a78bfa;
+            text-decoration: none;
+            word-break: break-all;
+            transition: color 0.2s;
+        }
+        .url-text:hover { color: #c4b5fd; }
+
+        .copy-btn {
+            flex-shrink: 0;
+            padding: 9px 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+            white-space: nowrap;
+        }
+        .copy-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
+        .copy-btn.copied { background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 12px rgba(34,197,94,0.4); }
+
+        /* ── Share row ── */
+        .share-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .share-btn {
+            flex: 1;
+            padding: 9px 6px;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.7);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, transform 0.15s;
+            text-align: center;
+        }
+        .share-btn:hover { background: rgba(255,255,255,0.14); color: #fff; transform: translateY(-2px); }
+
+        /* ── Meta grid ── */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .meta-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px 16px;
+            transition: background 0.2s;
+        }
+        .meta-item:hover { background: rgba(255,255,255,0.09); }
+        .meta-item.full { grid-column: 1 / -1; }
+        .meta-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.35);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 5px;
+        }
+        .meta-value {
+            font-size: 0.87rem;
+            color: rgba(255,255,255,0.85);
+            font-weight: 500;
+            word-break: break-all;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 50px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        /* ── Expiry ── */
+        .expiry-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(251,146,60,0.12);
+            border: 1px solid rgba(251,146,60,0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.83rem;
+            color: #fb923c;
+            margin-bottom: 20px;
+        }
+
+        /* ── Actions ── */
+        .actions { display: flex; flex-direction: column; gap: 10px; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 0.97rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            transition: transform 0.15s, box-shadow 0.15s;
+            letter-spacing: 0.2px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200%;
+            color: #fff;
+            border: none;
+            box-shadow: 0 6px 20px rgba(102,126,234,0.45);
+            animation: gradShift 4s ease infinite;
+        }
+        @keyframes gradShift {
+            0%,100% { background-position: 0% 50%; }
+            50%      { background-position: 100% 50%; }
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(102,126,234,0.55); }
+
+        .btn-ghost {
+            background: transparent;
+            color: rgba(255,255,255,0.65);
+            border: 1.5px solid rgba(255,255,255,0.2);
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.07); color: #fff; transform: translateY(-1px); }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #22c55e;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 24px rgba(34,197,94,0.4);
+            transition: transform 0.35s cubic-bezier(.22,1,.36,1);
+            z-index: 100;
+            white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 480px) {
+            .card { padding: 32px 20px; }
+            h1 { font-size: 1.4rem; }
+            .meta-grid { grid-template-columns: 1fr; }
+            .meta-item.full { grid-column: 1; }
+        }
+    </style>
 </head>
 <body>
-    <h2>URL Shortened Successfully</h2>
 
-    <p><strong>Original URL:</strong> <span th:text="${response.originalUrl}"></span></p>
-    <p><strong>Short Code:</strong> <span th:text="${response.shortCode}"></span></p>
-    <p><strong>Short URL:</strong>
-        <a th:href="${response.shortUrl}" th:text="${response.shortUrl}"></a>
-    </p>
-    <p th:if="${response.expiredAt}">
-        <strong>Expires At:</strong> <span th:text="${response.expiredAt}"></span>
-    </p>
+<canvas id="confetti"></canvas>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
 
-    <br/>
-    <a href="/">Shorten another URL</a>
+<div class="card">
+    <div class="success-ring">✓</div>
+    <h1>Your Link is Live! 🎉</h1>
+    <p class="subtitle">Ready to share — redirects in under 1ms</p>
+
+    <!-- Short URL -->
+    <div class="url-box">
+        <a th:href="${response.shortUrl}"
+           th:text="${response.shortUrl}"
+           class="url-text"
+           target="_blank"></a>
+        <button class="copy-btn" id="copyBtn"
+                th:attr="data-url=${response.shortUrl}"
+                onclick="copyUrl(this)">📋 Copy</button>
+    </div>
+
+    <!-- Share buttons -->
+    <div class="share-row">
+        <button class="share-btn" th:attr="data-url=${response.shortUrl}" onclick="shareWhatsApp(this)">💬 WhatsApp</button>
+        <button class="share-btn" th:attr="data-url=${response.shortUrl}" onclick="shareTwitter(this)">🐦 Twitter</button>
+        <button class="share-btn" th:attr="data-url=${response.shortUrl}" onclick="shareEmail(this)">📧 Email</button>
+        <button class="share-btn" th:attr="data-url=${response.shortUrl}" onclick="shareNative(this)">↗ Share</button>
+    </div>
+
+    <!-- Meta -->
+    <div class="meta-grid">
+        <div class="meta-item">
+            <div class="meta-label">Short Code</div>
+            <div class="meta-value"><span class="badge" th:text="${response.shortCode}"></span></div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">Created</div>
+            <div class="meta-value" th:text="${#temporals.format(response.createdAt, 'dd MMM yyyy HH:mm')}"></div>
+        </div>
+        <div class="meta-item full">
+            <div class="meta-label">Original URL</div>
+            <div class="meta-value" th:text="${response.originalUrl}"></div>
+        </div>
+    </div>
+
+    <!-- Expiry -->
+    <div class="expiry-bar" th:if="${response.expiredAt}">
+        ⏰ Expires: <strong th:text="${#temporals.format(response.expiredAt, 'dd MMM yyyy HH:mm')}"></strong>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+        <a href="/" class="btn btn-primary">✂️ &nbsp;Shorten Another URL</a>
+        <a th:href="${response.shortUrl}" class="btn btn-ghost" target="_blank">🚀 &nbsp;Open Short URL</a>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✅ Copied to clipboard!</div>
+
+<script>
+    /* ── Copy ── */
+    function copyUrl(btn) {
+        navigator.clipboard.writeText(btn.dataset.url).then(() => {
+            btn.textContent = '✅ Copied!';
+            btn.classList.add('copied');
+            showToast('✅ Copied to clipboard!', '#22c55e');
+            setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2500);
+        }).catch(() => showToast('❌ Copy failed', '#ef4444'));
+    }
+
+    /* ── Toast ── */
+    function showToast(msg, color = '#22c55e') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.background = color;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    /* ── Share ── */
+    function shareWhatsApp(btn) { window.open('https://wa.me/?text=' + encodeURIComponent(btn.dataset.url), '_blank'); }
+    function shareTwitter(btn)  { window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(btn.dataset.url), '_blank'); }
+    function shareEmail(btn)    { window.location.href = 'mailto:?subject=Check this link&body=' + encodeURIComponent(btn.dataset.url); }
+    function shareNative(btn) {
+        if (navigator.share) navigator.share({ url: btn.dataset.url });
+        else { copyUrl(document.getElementById('copyBtn')); }
+    }
+
+    /* ── Confetti ── */
+    (function () {
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const colors = ['#667eea','#f093fb','#22c55e','#fbbf24','#f87171','#4facfe','#a78bfa'];
+        const pieces = Array.from({ length: 120 }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            w: Math.random() * 10 + 5,
+            h: Math.random() * 6 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rot: Math.random() * 360,
+            vx: (Math.random() - 0.5) * 2,
+            vy: Math.random() * 3 + 1.5,
+            vr: (Math.random() - 0.5) * 4,
+            opacity: 1
+        }));
+
+        let frame = 0;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            pieces.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+                if (frame > 120) p.opacity = Math.max(0, p.opacity - 0.008);
+                ctx.save();
+                ctx.globalAlpha = p.opacity;
+                ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+                ctx.rotate(p.rot * Math.PI / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                ctx.restore();
+                if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; p.opacity = 1; }
+            });
+            frame++;
+            if (frame < 300) requestAnimationFrame(draw);
+            else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        draw();
+
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+    })();
+</script>
 </body>
 </html>

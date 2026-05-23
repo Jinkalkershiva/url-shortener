@@ -1,7 +1,12 @@
 server:
   port: 8081
+  error:
+    whitelabel:
+      enabled: false
 
 spring:
+  application:
+    name: URLShortenerService
   datasource:
     url: jdbc:mysql://localhost:3306/urlshortener
     username: root
@@ -11,3 +16,4 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+    open-in-view: false

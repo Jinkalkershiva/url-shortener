@@ -1,29 +1,35 @@
-HELP.md
-
+# =====================
+# Maven / Gradle build outputs
+# =====================
 target/
 build/
-
-.mvn/wrapper/maven-wrapper.jar
 
 !**/src/main/**/target/
 !**/src/test/**/target/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# STS
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# =====================
+# IDEs
+# =====================
 
 # IntelliJ IDEA
 .idea/
 *.iws
 *.iml
 *.ipr
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.apt_generated
+.sts4-cache/
 
 # VS Code
 .vscode/
@@ -35,10 +41,20 @@ build/
 /nbdist/
 /.nb-gradle/
 
+# =====================
 # Logs
+# =====================
 *.log
 
-# Java package files
+# =====================
+# OS files (optional but good)
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Java artifacts
+# =====================
 *.jar
 *.war
 *.nar
@@ -47,6 +63,8 @@ build/
 *.tar.gz
 *.rar
 
+# =====================
 # JVM crash logs
+# =====================
 hs_err_pid*
 replay_pid*
