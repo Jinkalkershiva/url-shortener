@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>URL Shortened</title>
+</head>
+<body>
+    <h2>URL Shortened Successfully</h2>
+
+    <p><strong>Original URL:</strong> <span th:text="${response.originalUrl}"></span></p>
+    <p><strong>Short Code:</strong> <span th:text="${response.shortCode}"></span></p>
+    <p><strong>Short URL:</strong>
+        <a th:href="${response.shortUrl}" th:text="${response.shortUrl}"></a>
+    </p>
+    <p th:if="${response.expiredAt}">
+        <strong>Expires At:</strong> <span th:text="${response.expiredAt}"></span>
+    </p>
+
+    <br/>
+    <a href="/">Shorten another URL</a>
+</body>
+</html>
