@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Slf4j
-@RestControllerAdvice
+@RestControllerAdvice(assignableTypes = {ShortUrlController.class, RedirectController.class})
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)

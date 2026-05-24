@@ -7,13 +7,15 @@ server:
 spring:
   application:
     name: URLShortenerService
+
   datasource:
-    url: jdbc:mysql://localhost:3306/urlshortener
-    username: root
-    password: shivaJ@123
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     open-in-view: false
