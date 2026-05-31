@@ -1,0 +1,42 @@
+server:
+  port: 8081
+  error:
+    whitelabel:
+      enabled: false
+
+spring:
+  application:
+    name: URLShortenerService
+  datasource:
+    url: jdbc:mysql://localhost:3306/urlshortener
+    username: root
+    password: shivaJ@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:google-placeholder-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:google-placeholder-client-secret}
+            scope:
+              - email
+              - profile
+          github:
+            client-id: ${GITHUB_CLIENT_ID:github-placeholder-client-id}
+            client-secret: ${GITHUB_CLIENT_SECRET:github-placeholder-client-secret}
+            scope:
+              - read:user
+              - user:email
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:9a4f2c8d3e7b1a5c6f8e0d2a4c6b8e0d2f4a6c8b0d2e4f6a8c0b2d4e6f8a0c2b}
+    expiration-ms: 86400000 # 24 hours
+
